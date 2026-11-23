@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Nasza Passa TikTokowa — Odsłoń Karty 🔥</title>
+    <style>
+      :root {
+        --tt-black: #0b0b0f;
+        --tt-cyan: #25f4ee;
+        --tt-rose: #fe2c55;
+        --tt-white: #ffffff;
+        --tt-muted: rgba(255, 255, 255, 0.74);
+        --streak-purple: #5b109c;
+        --streak-ink: #121016;
+        --font-display: "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+        --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --ease-spring: cubic-bezier(0.22, 1.22, 0.36, 1);
+        --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+      body {
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 15%, rgba(37, 244, 238, 0.08), transparent 42%),
+          radial-gradient(circle at 80% 85%, rgba(254, 44, 85, 0.1), transparent 42%),
+          #050508;
+        color: var(--tt-white);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        padding: 12px 0;
+      }
+
+      #confetti-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+      #particles-layer { position: fixed; inset: 0; pointer-events: none; z-index: 95; overflow: hidden; }
+
+      .float-particle {
+        position: fixed;
+        font-size: 26px;
+        pointer-events: none;
+        animation: floatUpPop 0.95s var(--ease-smooth) forwards;
+      }
+      @keyframes floatUpPop {
+        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.45) rotate(var(--rot, 0deg)); }
+        20% { opacity: 1; transform: translate(-50%, -75%) scale(1.25) rotate(var(--rot, 0deg)); }
+        100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), -180px) scale(0.9) rotate(var(--rot, 0deg)); }
+      }
+
+      .app-shell {
+        width: min(430px, 96vw);
+        margin: 0 auto;
+        padding: 0 16px 28px;
+        border-radius: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+        background:
+          radial-gradient(circle at 12% 8%, rgba(37, 244, 238, 0.14), transparent 38%),
+          radial-gradient(circle at 88% 18%, rgba(254, 44, 85, 0.16), transparent 40%),
+          var(--tt-black);
+        overflow-x: clip;
+      }
+
+      .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        margin: 0 -16px;
+        padding: 14px 16px 12px;
+        background: rgba(11, 11, 15, 0.88);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+      .pair-badge { display: flex; align-items: center; gap: 9px; }
+      .mini-avatars { display: flex; align-items: center; }
+      .mini-avatars img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid #fff; }
+      .mini-avatars img + img { margin-left: -10px; }
+      .pair-meta { display: flex; flex-direction: column; line-height: 1.15; }
+      .pair-title { font-size: 13.5px; font-weight: 800; }
+      .pair-sub { font-size: 11px; color: var(--tt-muted); }
+
+      .icon-btn {
+        width: 34px; height: 34px; border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff; display: grid; place-items: center; font-size: 15px; cursor: pointer;
+      }
+
+      .progress-wrap { display: flex; align-items: center; gap: 10px; }
+      .progress-track { flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+      .progress-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--tt-cyan), var(--tt-rose), #ff56d6); transition: width 0.5s var(--ease-spring); }
+      .progress-label { font-size: 11.5px; font-weight: 700; color: var(--tt-cyan); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+      .hero-intro { text-align: center; padding: 20px 6px 14px; }
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: 29px;
+        line-height: 1.1;
+        font-weight: 800;
+        text-shadow: -2px 0 0 rgba(37, 244, 238, 0.8), 2px 0 0 rgba(254, 44, 85, 0.8);
+        margin-bottom: 8px;
+      }
+      .hero-sub { font-size: 13.5px; color: var(--tt-muted); line-height: 1.45; max-width: 330px; margin: 0 auto; }
+
+      .cards-deck { display: flex; flex-direction: column; gap: 13px; padding-bottom: 16px; }
+      .reveal-slot { position: relative; perspective: 1100px; }
+
+      .card-cover {
+        position: relative; width: 100%; padding: 20px 16px; border-radius: 24px;
+        border: 1.5px solid rgba(255, 255, 255, 0.14);
+        background: linear-gradient(145deg, #191926 0%, #12121b 100%);
+        color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        text-align: left; cursor: pointer; overflow: hidden;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+        transition: transform 0.2s var(--ease-spring);
+      }
+      .card-cover:active { transform: scale(0.96); }
+      .card-cover--streak { background: linear-gradient(145deg, #3c145f 0%, #24103a 100%); border-color: rgba(243, 198, 251, 0.45); }
+      .card-cover--finale { background: linear-gradient(145deg, #4b1236 0%, #220d26 100%); border-color: rgba(254, 44, 85, 0.48); }
+
+      .cover-left { display: flex; align-items: center; gap: 13px; min-width: 0; }
+      .cover-icon { width: 50px; height: 50px; border-radius: 16px; background: rgba(255, 255, 255, 0.09); display: grid; place-items: center; font-size: 26px; flex-shrink: 0; }
+      .cover-num { font-size: 10.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tt-cyan); margin-bottom: 2px; }
+      .cover-title { font-family: var(--font-display); font-size: 17.5px; line-height: 1.15; margin-bottom: 2px; }
+      .cover-hint { font-size: 12px; color: var(--tt-muted); }
+      .cover-pill { flex-shrink: 0; padding: 8px 13px; border-radius: 999px; background: linear-gradient(135deg, var(--tt-rose), #ff4fd8); color: #fff; font-size: 12px; font-weight: 800; }
+
+      .card-face { display: none; border-radius: 24px; overflow: hidden; transform-origin: center top; animation: cardFlipReveal 0.56s var(--ease-spring) forwards; }
+      .reveal-slot.revealed .card-cover { display: none; }
+      .reveal-slot.revealed .card-face { display: block; }
+      @keyframes cardFlipReveal {
+        0% { opacity: 0; transform: rotateX(-28deg) scale(0.92); }
+        60% { opacity: 1; transform: rotateX(4deg) scale(1.015); }
+        100% { opacity: 1; transform: rotateX(0deg) scale(1); }
+      }
+
+      /* Karta 1: Odznaka Passy */
+      .face--streak { background: linear-gradient(170deg, #f3c4fb 0%, #f8d4ff 55%, #f0bdf9 100%); color: var(--streak-ink); padding: 18px 14px 20px; border: 2px solid var(--streak-ink); }
+      .streak-headline { font-family: var(--font-display); font-size: 24px; line-height: 1.08; color: var(--streak-purple); margin-bottom: 4px; }
+      .mascot-svg-wrap { width: 100%; cursor: pointer; }
+      .mascot-svg-wrap.bounce { animation: mascotJump 0.52s var(--ease-spring); }
+      @keyframes mascotJump { 0% { transform: translateY(0) scale(1); } 35% { transform: translateY(-14px) scale(1.05); } 100% { transform: translateY(0) scale(1); } }
+      .mascot-names { display: flex; justify-content: space-between; padding: 0 4px; margin-top: -6px; margin-bottom: 8px; }
+      .mascot-person { width: 45%; text-align: center; }
+      .mascot-person-name { font-size: 13.5px; font-weight: 800; }
+      .mascot-person-handle { font-size: 11px; font-weight: 600; color: rgba(18, 16, 22, 0.65); }
+
+      .starburst-box { position: relative; padding: 22px 12px 18px; display: flex; flex-direction: column; align-items: center; }
+      .starburst-bg { position: absolute; inset: -4px -6px; width: calc(100% + 12px); height: calc(100% + 8px); z-index: 0; pointer-events: none; }
+      .starburst-inner { position: relative; z-index: 2; width: 100%; display: flex; flex-direction: column; align-items: center; }
+      .comic-tag { display: inline-block; background: var(--streak-ink); color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; transform: rotate(-2.5deg); }
+      .comic-tag.tilt-right { transform: rotate(2deg); }
+      .comic-number-big {
+        font-family: var(--font-display); font-size: 76px; line-height: 0.94; font-weight: 800; margin: 6px 0 10px;
+        background: linear-gradient(180deg, #ff56d6 0%, #c03cff 55%, #7c3aff 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        -webkit-text-stroke: 3px var(--streak-ink); paint-order: stroke fill;
+      }
+      .starburst-substats { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .starburst-substat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .comic-number-sub {
+        font-family: var(--font-display); font-size: 30px; line-height: 1; font-weight: 800;
+        background: linear-gradient(180deg, #ff56d6 0%, #9b3dff 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        -webkit-text-stroke: 2px var(--streak-ink); paint-order: stroke fill;
+      }
+
+      /* Karta ciemna */
+      .face--dark { background: linear-gradient(155deg, #171723 0%, #101018 100%); border: 1.5px solid rgba(255, 255, 255, 0.12); padding: 20px 16px; }
+      .eyebrow { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tt-cyan); margin-bottom: 6px; }
+      .big-odometer { font-family: var(--font-display); font-size: 48px; line-height: 1; font-weight: 800; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+      .card-lead { font-size: 13px; color: var(--tt-muted); line-height: 1.45; margin-bottom: 14px; }
+      .facts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .fact-box { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 14px; padding: 11px 6px; text-align: center; }
+      .fact-val { display: block; font-family: var(--font-display); font-size: 18px; color: var(--tt-cyan); margin-bottom: 3px; }
+      .fact-desc { font-size: 10.5px; color: var(--tt-muted); line-height: 1.25; }
+
+      /* Bitwa */
+      .category-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+      .cat-tab { padding: 6px 11px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.8); font-size: 11.5px; font-weight: 700; cursor: pointer; }
+      .cat-tab.active { background: #fff; color: var(--tt-black); border-color: #fff; }
+      .battle-duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 14px; }
+      .battle-player { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .battle-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #fff; border: 3px solid var(--tt-cyan); }
+      .battle-player.her .battle-avatar { border-color: var(--tt-rose); }
+      .battle-pct { font-family: var(--font-display); font-size: 25px; }
+      .battle-player.me .battle-pct { color: var(--tt-cyan); }
+      .battle-player.her .battle-pct { color: var(--tt-rose); }
+      .battle-count { font-size: 12px; color: var(--tt-muted); }
+      .battle-vs { font-family: var(--font-display); font-size: 13px; color: rgba(255, 255, 255, 0.4); }
+      .tug-bar { width: 100%; height: 15px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); display: flex; padding: 2px; gap: 3px; margin-bottom: 12px; }
+      .tug-me { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #19c9c4, var(--tt-cyan)); transition: width 0.6s var(--ease-spring); }
+      .tug-her { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--tt-rose), #ff56d6); transition: width 0.6s var(--ease-spring); }
+      .battle-badges { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .verdict-chip { padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); font-size: 11px; text-align: center; }
+      .verdict-chip strong { display: block; font-size: 12px; margin-bottom: 2px; }
+
+      /* FYP */
+      .fyp-wrap { position: relative; }
+      .fyp-main-stat { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+      .fyp-big-num { font-family: var(--font-display); font-size: 44px; line-height: 1; }
+      .fyp-unit { font-size: 14px; font-weight: 700; color: var(--tt-cyan); }
+      .mix-list { display: flex; flex-direction: column; gap: 9px; padding-right: 46px; }
+      .mix-item-head { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 600; margin-bottom: 4px; }
+      .mix-bar { width: 100%; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+      .mix-fill { height: 100%; border-radius: 999px; transition: width 0.8s var(--ease-spring); }
+      .mix-fill.text { background: var(--tt-cyan); }
+      .mix-fill.tiktok { background: var(--tt-rose); }
+      .mix-fill.other { background: #c06bff; }
+      .fyp-sidebar { position: absolute; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; }
+      .fyp-action { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #fff; cursor: pointer; }
+      .fyp-action-icon { width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); display: grid; place-items: center; font-size: 18px; }
+      .fyp-action.liked .fyp-action-icon { background: rgba(254, 44, 85, 0.28); }
+      .fyp-action span { font-size: 10.5px; font-weight: 700; }
+
+      /* Pierwsza wiadomość */
+      .msg-meta-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+      .msg-meta-row img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #fff; border: 2px solid var(--tt-cyan); }
+      .msg-bubble { padding: 12px 14px; border-radius: 16px 16px 16px 4px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 13px; line-height: 1.45; margin-bottom: 10px; }
+      .funny-note { padding: 9px 12px; border-radius: 12px; background: rgba(254, 44, 85, 0.16); color: #ff9cb0; font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 12px; }
+      .tiktok-link-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 14px; border-radius: 13px; background: #fff; color: var(--tt-black); text-decoration: none; font-size: 13px; font-weight: 800; }
+
+      /* Finał */
+      .face--finale { background: linear-gradient(165deg, #f3c6fb 0%, #ffd6eb 52%, #f5c9fc 100%); color: var(--streak-ink); border: 2px solid var(--streak-ink); padding: 20px 16px; text-align: center; }
+      .finale-avatars { display: flex; justify-content: center; margin-bottom: 10px; }
+      .finale-avatars img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #fff; border: 3px solid var(--streak-ink); }
+      .finale-avatars img + img { margin-left: -14px; }
+      .finale-title { font-family: var(--font-display); font-size: 22px; line-height: 1.15; color: var(--streak-purple); margin-bottom: 8px; }
+      .finale-msg { font-size: 13.5px; line-height: 1.48; color: rgba(18, 16, 22, 0.86); margin-bottom: 10px; }
+      .finale-sign { font-family: var(--font-display); font-size: 15px; margin-bottom: 14px; }
+      .spark-btn { width: 100%; padding: 13px 16px; border-radius: 15px; border: 2.5px solid var(--streak-ink); background: linear-gradient(135deg, #ff4fd8, #fe2c55); color: #fff; font-size: 14.5px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--streak-ink); }
+      .spark-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--streak-ink); }
+
+      .deck-controls { display: flex; justify-content: center; gap: 10px; padding-top: 4px; }
+      .ctrl-btn { padding: 9px 15px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+    <div id="particles-layer" aria-hidden="true"></div>
+
+    <main class="app-shell">
+      <header class="top-bar">
+        <div class="top-row">
+          <div class="pair-badge">
+            <div class="mini-avatars" id="mini-avatars"></div>
+            <div class="pair-meta">
+              <span class="pair-title" id="header-title">Ja × @mdartynaaa</span>
+              <span class="pair-sub">18.04.2026 — 23.11.2026</span>
+            </div>
+          </div>
+          <button type="button" class="icon-btn" id="sound-toggle" title="Dźwięki">🔊</button>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <span class="progress-label" id="progress-label">0 / 6 kart</span>
+        </div>
+      </header>
+
+      <section class="hero-intro">
+        <h1 class="hero-title">Nasza Passa TikTokowa</h1>
+        <p class="hero-sub">Klikaj zakryte karty po kolei, żeby odsłonić naszą wspólną historię i wszystkie statystyki 🔥</p>
+      </section>
+
+      <section class="cards-deck" id="cards-deck"></section>
+
+      <div class="deck-controls">
+        <button type="button" class="ctrl-btn" id="reveal-all-btn">✨ Odsłoń wszystkie</button>
+        <button type="button" class="ctrl-btn" id="reset-all-btn">↺ Zakryj ponownie</button>
+      </div>
+    </main>
+
+    <script>
+      const AVATAR_ME = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Crect width='120' height='120' fill='%23ffffff'/%3E%3C/svg%3E";
+      const AVATAR_HER = "data:image/jpeg;base64,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";
+
+      const cfg = {
+        me: { name: "Ja", handle: "@rekoy.music", avatar: AVATAR_ME, badge: "Oficjalny Gaduła 💬" },
+        her: { name: "✨", handle: "@mdartynaaa", avatar: AVATAR_HER, badge: "Królowa Klimatu ✨" },
+        dates: { startDate: "18.04.2026", reportDate: "23.11.2026", daysTogether: 220 },
+        stats: {
+          totalMessages: 138610,
+          me: { total: 84332, tiktoks: 5298, text: 76745, other: 2289 },
+          her: { total: 54278, tiktoks: 3548, text: 49224, other: 1506 }
+        },
+        firstMessage: {
+          date: "18.04.2026, 19:54",
+          type: "TikTok (wideo)",
+          url: "https://www.tiktok.com/@6852780755937575941/video/7629656538327633174",
+          caption: "Yesterday morning in Warszw one of their Solaris Urbino 12 III Generation ended it life 😓😓😭😭 #warsaw #poland #bus #fire #goodbye",
+          funnyNote: "Płonący Solaris w Warszawie zapalił nasz ogień 🔥🚌"
+        }
+      };
+
+      const fmtPL = (n) => Math.round(n).toLocaleString("pl-PL");
+      const fmtShort = (n) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n));
+      const pct = (a, b) => ((a / b) * 100).toFixed(1);
+
+      const days = cfg.dates.daysTogether;
+      const totalMsgs = cfg.stats.totalMessages;
+      const totalTikToks = cfg.stats.me.tiktoks + cfg.stats.her.tiktoks;
+      const totalText = cfg.stats.me.text + cfg.stats.her.text;
+      const totalOther = cfg.stats.me.other + cfg.stats.her.other;
+      const msgsPerDay = Math.round(totalMsgs / days);
+      const msgsPerHour = Math.round(totalMsgs / (days * 24));
+      const secsPerMsg = Math.round((days * 86400) / totalMsgs);
+      const minsPart = Math.floor(secsPerMsg / 60);
+      const secsPart = secsPerMsg % 60;
+      const tiktoksPerDay = Math.round(totalTikToks / days);
+
+      let soundEnabled = true;
+      let audioCtx = null;
+      function playTone(freq = 540, dur = 0.09, type = "sine", gVal = 0.07) {
+        if (!soundEnabled) return;
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === "suspended") audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.35, audioCtx.currentTime + dur);
+          gain.gain.setValueAtTime(gVal, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(); osc.stop(audioCtx.currentTime + dur);
+        } catch {}
+      }
+      function playChime() {
+        playTone(523, 0.11, "triangle", 0.07);
+        setTimeout(() => playTone(659, 0.11, "triangle", 0.07), 75);
+        setTimeout(() => playTone(784, 0.16, "triangle", 0.08), 150);
+      }
+
+      const canvas = document.getElementById("confetti-canvas");
+      const ctx = canvas.getContext("2d");
+      let pieces = [], rafId = null;
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      function launchConfetti(count = 50, ox = window.innerWidth / 2, oy = window.innerHeight * 0.4) {
+        const colors = ["#25F4EE", "#FE2C55", "#FF56D6", "#8B3DFF", "#FFD166", "#FFFFFF"];
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 7;
+          pieces.push({ x: ox, y: oy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 4, w: 6 + Math.random() * 5, h: 4 + Math.random() * 5, color: colors[i % colors.length], rot: Math.random() * 360, vRot: (Math.random() - 0.5) * 14, alpha: 1, g: 0.22 });
+        }
+        if (!rafId) tickConfetti();
+      }
+      function tickConfetti() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        pieces = pieces.filter((p) => p.alpha > 0.02);
+        for (const p of pieces) {
+          p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= 0.985; p.rot += p.vRot; p.alpha -= 0.012;
+          ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha); ctx.translate(p.x, p.y); ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+        }
+        if (pieces.length) rafId = requestAnimationFrame(tickConfetti);
+        else { rafId = null; ctx.clearRect(0, 0, window.innerWidth, window.innerHeight); }
+      }
+
+      const particlesLayer = document.getElementById("particles-layer");
+      function spawnParticle(x, y, emoji = "🔥") {
+        const el = document.createElement("span");
+        el.className = "float-particle"; el.textContent = emoji;
+        el.style.left = `${x}px`; el.style.top = `${y}px`;
+        el.style.setProperty("--dx", `${(Math.random() - 0.5) * 56}px`);
+        el.style.setProperty("--rot", `${(Math.random() - 0.5) * 30}deg`);
+        particlesLayer.appendChild(el);
+        setTimeout(() => el.remove(), 980);
+      }
+
+      function animateNumber(el, target, dur = 950, fmt = fmtPL) {
+        const start = performance.now();
+        function step(now) {
+          const t = Math.min((now - start) / dur, 1);
+          el.textContent = fmt(target * (1 - Math.pow(1 - t, 3)));
+          if (t < 1) requestAnimationFrame(step);
+          else el.textContent = fmt(target);
+        }
+        requestAnimationFrame(step);
+      }
+
+      function buildMascotSVG() {
+        return `<svg viewBox="0 0 360 222" width="100%" height="auto">
+          <defs>
+            <linearGradient id="flameGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#7c3cff"/><stop offset="52%" stop-color="#c348ff"/><stop offset="100%" stop-color="#ff69d9"/></linearGradient>
+            <linearGradient id="coreGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#fff" stop-opacity="0.96"/><stop offset="100%" stop-color="#ffd1f5" stop-opacity="0.88"/></linearGradient>
+            <clipPath id="clipLeftAv"><circle cx="68" cy="76" r="48"/></clipPath>
+            <clipPath id="clipRightAv"><circle cx="292" cy="76" r="48"/></clipPath>
+          </defs>
+          <ellipse cx="180" cy="210" rx="48" ry="7" fill="rgba(91,16,156,0.22)"/>
+          <path d="M138 134 C112 146, 94 142, 76 130" fill="none" stroke="#121016" stroke-width="5" stroke-linecap="round"/>
+          <path d="M222 134 C248 146, 266 142, 284 130" fill="none" stroke="#121016" stroke-width="5" stroke-linecap="round"/>
+          <path d="M56 128 C56 120, 88 120, 92 128 C94 135, 84 140, 72 139 C60 139, 56 134, 56 128 Z" fill="#fff" stroke="#121016" stroke-width="3.2"/>
+          <path d="M304 128 C304 120, 272 120, 268 128 C266 135, 276 140, 288 139 C300 139, 304 134, 304 128 Z" fill="#fff" stroke="#121016" stroke-width="3.2"/>
+          <circle cx="68" cy="76" r="49" fill="#fff"/>
+          <image href="${cfg.me.avatar}" x="20" y="28" width="96" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#clipLeftAv)"/>
+          <circle cx="68" cy="76" r="49" fill="none" stroke="#121016" stroke-width="4"/>
+          <circle cx="292" cy="76" r="49" fill="#fff"/>
+          <image href="${cfg.her.avatar}" x="244" y="28" width="96" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#clipRightAv)"/>
+          <circle cx="292" cy="76" r="49" fill="none" stroke="#121016" stroke-width="4"/>
+          <path d="M167 176 L163 198" stroke="#121016" stroke-width="5" stroke-linecap="round"/>
+          <path d="M193 176 L197 198" stroke="#121016" stroke-width="5" stroke-linecap="round"/>
+          <path d="M144 203 C144 194, 169 192, 171 203 C172 208, 144 209, 144 203 Z" fill="#fff" stroke="#121016" stroke-width="3.2"/>
+          <path d="M216 203 C216 194, 191 192, 189 203 C188 208, 216 209, 216 203 Z" fill="#fff" stroke="#121016" stroke-width="3.2"/>
+          <ellipse cx="204" cy="36" rx="7" ry="3.5" transform="rotate(28 204 36)" fill="#9b46ff" stroke="#121016" stroke-width="2.5"/>
+          <path d="M180 180 C144 180, 128 152, 130 118 C131 99, 141 88, 145 78 C149 88, 152 94, 154 96 C152 72, 164 51, 176 34 C176 50, 183 60, 191 66 C196 58, 200 52, 202 48 C214 66, 229 88, 230 118 C232 152, 216 180, 180 180 Z" fill="url(#flameGrad)" stroke="#121016" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M180 164 C166 164, 160 150, 166 135 C170 124, 177 116, 180 107 C183 116, 190 124, 194 135 C200 150, 194 164, 180 164 Z" fill="url(#coreGrad)"/>
+        </svg>`;
+      }
+
+      function buildStarburstSVG() {
+        return `<svg class="starburst-bg" viewBox="0 0 360 250" preserveAspectRatio="none">
+          <path d="M28 54 L88 64 L118 14 L168 50 L248 16 L246 66 L342 52 L292 114 L334 156 L278 166 L306 232 L226 196 L192 242 L152 198 L76 232 L92 174 L16 168 L58 118 Z"
+            fill="rgba(255,255,255,0.34)" stroke="#121016" stroke-width="3.2" stroke-linejoin="round"/>
+        </svg>`;
+      }
+
+      const CARDS = [
+        {
+          icon: "🔥", title: "Odznaka naszej Passy", hint: "Kultowa karta z płomykiem i profilowymi", coverClass: "card-cover--streak",
+          buildFace() {
+            const f = document.createElement("div"); f.className = "card-face face--streak";
+            f.innerHTML = `<h2 class="streak-headline">Ulepszyliśmy naszą<br/>odznakę Passy!</h2>
+              <div class="mascot-svg-wrap" data-mascot>${buildMascotSVG()}</div>
+              <div class="mascot-names">
+                <div class="mascot-person"><div class="mascot-person-name">${cfg.me.name}</div><div class="mascot-person-handle">${cfg.me.handle}</div></div>
+                <div class="mascot-person"><div class="mascot-person-name">${cfg.her.name}</div><div class="mascot-person-handle">${cfg.her.handle}</div></div>
+              </div>
+              <div class="starburst-box">${buildStarburstSVG()}<div class="starburst-inner">
+                <span class="comic-tag">Dni naszej historii</span>
+                <div class="comic-number-big" data-days-num>0</div>
+                <div class="starburst-substats">
+                  <div class="starburst-substat"><span class="comic-tag">Wiadomości</span><div class="comic-number-sub">${fmtShort(totalMsgs)}</div></div>
+                  <div class="starburst-substat"><span class="comic-tag tilt-right">TikToki</span><div class="comic-number-sub">${fmtShort(totalTikToks)}</div></div>
+                </div>
+              </div></div>`;
+            const m = f.querySelector("[data-mascot]");
+            m.addEventListener("click", (e) => { m.classList.remove("bounce"); void m.offsetWidth; m.classList.add("bounce"); playTone(620, 0.1, "triangle", 0.08); launchConfetti(35, e.clientX, e.clientY); spawnParticle(e.clientX, e.clientY, "🔥"); });
+            return f;
+          },
+          onReveal(f) { animateNumber(f.querySelector("[data-days-num]"), days, 900, (v) => String(Math.round(v))); }
+        },
+        {
+          icon: "💬", title: "Ile napisaliśmy?", hint: "Odsłoń łączny licznik i tempo pisania",
+          buildFace() {
+            const f = document.createElement("div"); f.className = "card-face face--dark";
+            f.innerHTML = `<span class="eyebrow">Łącznie w naszym czacie</span>
+              <div class="big-odometer" data-total-num>0</div>
+              <p class="card-lead">tyle wiadomości wymieniliśmy od <strong>${cfg.dates.startDate}</strong> do <strong>${cfg.dates.reportDate}</strong>.</p>
+              <div class="facts-grid">
+                <div class="fact-box"><span class="fact-val">~${fmtPL(msgsPerDay)}</span><span class="fact-desc">wiadomości dziennie</span></div>
+                <div class="fact-box"><span class="fact-val">~${msgsPerHour}/h</span><span class="fact-desc">co godzinę non-stop</span></div>
+                <div class="fact-box"><span class="fact-val">${minsPart}m ${secsPart}s</span><span class="fact-desc">średnio między msg</span></div>
+              </div>`;
+            return f;
+          },
+          onReveal(f) { animateNumber(f.querySelector("[data-total-num]"), totalMsgs, 1100); }
+        },
+        {
+          icon: "⚡", title: "Kto więcej pisze?", hint: "Bitwa na liczby + przełącznik kategorii",
+          buildFace() {
+            const cats = {
+              all: { label: "Wszystkie", me: cfg.stats.me.total, her: cfg.stats.her.total },
+              text: { label: "Tekst", me: cfg.stats.me.text, her: cfg.stats.her.text },
+              tiktoks: { label: "TikToki", me: cfg.stats.me.tiktoks, her: cfg.stats.her.tiktoks },
+              other: { label: "Inne", me: cfg.stats.me.other, her: cfg.stats.her.other }
+            };
+            const f = document.createElement("div"); f.className = "card-face face--dark";
+            f.innerHTML = `<span class="eyebrow">Bitwa na liczby</span>
+              <div class="category-tabs">${Object.entries(cats).map(([k, v], i) => `<button type="button" class="cat-tab ${i === 0 ? "active" : ""}" data-cat="${k}">${v.label}</button>`).join("")}</div>
+              <div class="battle-duel">
+                <div class="battle-player me"><img class="battle-avatar" src="${cfg.me.avatar}" alt="Ja"/><div class="battle-pct" data-pct-me>60.8%</div><div class="battle-count" data-cnt-me>${fmtPL(cfg.stats.me.total)}</div></div>
+                <div class="battle-vs">VS</div>
+                <div class="battle-player her"><img class="battle-avatar" src="${cfg.her.avatar}" alt="@mdartynaaa"/><div class="battle-pct" data-pct-her>39.2%</div><div class="battle-count" data-cnt-her>${fmtPL(cfg.stats.her.total)}</div></div>
+              </div>
+              <div class="tug-bar"><div class="tug-me" data-tug-me style="width:50%"></div><div class="tug-her" data-tug-her style="width:50%"></div></div>
+              <div class="battle-badges">
+                <div class="verdict-chip"><strong>${cfg.me.name}</strong>${cfg.me.badge}</div>
+                <div class="verdict-chip"><strong>${cfg.her.handle}</strong>${cfg.her.badge}</div>
+              </div>`;
+            const upd = (k) => {
+              const it = cats[k], sum = it.me + it.her, p1 = pct(it.me, sum), p2 = pct(it.her, sum);
+              f.querySelector("[data-pct-me]").textContent = `${p1}%`; f.querySelector("[data-pct-her]").textContent = `${p2}%`;
+              f.querySelector("[data-cnt-me]").textContent = fmtPL(it.me); f.querySelector("[data-cnt-her]").textContent = fmtPL(it.her);
+              f.querySelector("[data-tug-me]").style.width = `${p1}%`; f.querySelector("[data-tug-her]").style.width = `${p2}%`;
+            };
+            f.querySelectorAll(".cat-tab").forEach((b) => b.addEventListener("click", () => {
+              f.querySelectorAll(".cat-tab").forEach((x) => x.classList.remove("active")); b.classList.add("active");
+              playTone(500, 0.07, "sine", 0.06); upd(b.dataset.cat);
+            }));
+            f._upd = upd; return f;
+          },
+          onReveal(f) { setTimeout(() => f._upd("all"), 150); }
+        },
+        {
+          icon: "🎬", title: "Nasz prywatny FYP", hint: "Wysłane TikToki i podział wiadomości",
+          buildFace() {
+            const tP = pct(totalText, totalMsgs), ttP = pct(totalTikToks, totalMsgs), oP = pct(totalOther, totalMsgs);
+            let likes = totalTikToks;
+            const f = document.createElement("div"); f.className = "card-face face--dark";
+            f.innerHTML = `<div class="fyp-wrap">
+              <span class="eyebrow">Nasz prywatny For You Page • ~${tiktoksPerDay}/dzień</span>
+              <div class="fyp-main-stat"><span class="fyp-big-num" data-tt-num>0</span><span class="fyp-unit">TikToków</span></div>
+              <p class="card-lead" style="padding-right:46px">Ja wysłałem <strong>${fmtPL(cfg.stats.me.tiktoks)}</strong>, a Ty <strong>${fmtPL(cfg.stats.her.tiktoks)}</strong>.</p>
+              <div class="mix-list">
+                <div><div class="mix-item-head"><span>💬 Same wiadomości</span><span>${fmtPL(totalText)} (${tP}%)</span></div><div class="mix-bar"><div class="mix-fill text" data-w="${tP}%" style="width:0%"></div></div></div>
+                <div><div class="mix-item-head"><span>🎬 TikToki</span><span>${fmtPL(totalTikToks)} (${ttP}%)</span></div><div class="mix-bar"><div class="mix-fill tiktok" data-w="${Math.max(Number(ttP), 10)}%" style="width:0%"></div></div></div>
+                <div><div class="mix-item-head"><span>🎨 Naklejki & Media</span><span>${fmtPL(totalOther)} (${oP}%)</span></div><div class="mix-bar"><div class="mix-fill other" data-w="${Math.max(Number(oP), 6)}%" style="width:0%"></div></div></div>
+              </div>
+              <div class="fyp-sidebar"><button type="button" class="fyp-action" data-like-btn><div class="fyp-action-icon">🤍</div><span data-like-cnt>${fmtShort(likes)}</span></button></div>
+            </div>`;
+            const btn = f.querySelector("[data-like-btn]");
+            btn.addEventListener("click", (e) => {
+              likes += 1; btn.classList.add("liked"); btn.querySelector(".fyp-action-icon").textContent = "❤️";
+              f.querySelector("[data-like-cnt]").textContent = fmtPL(likes);
+              playTone(680, 0.08, "sine", 0.07); spawnParticle(e.clientX, e.clientY, "❤️");
+            });
+            return f;
+          },
+          onReveal(f) { animateNumber(f.querySelector("[data-tt-num]"), totalTikToks, 950); setTimeout(() => f.querySelectorAll(".mix-fill").forEach((b) => (b.style.width = b.dataset.w)), 180); }
+        },
+        {
+          icon: "🚌", title: "Od czego to się zaczęło?", hint: `Najstarsza wiadomość z ${cfg.dates.startDate}`,
+          buildFace() {
+            const fm = cfg.firstMessage;
+            const f = document.createElement("div"); f.className = "card-face face--dark";
+            f.innerHTML = `<span class="eyebrow">Kapsuła czasu • Pierwsza wiadomość</span>
+              <div class="msg-meta-row"><img src="${cfg.me.avatar}" alt="Ja"/><div><div style="font-weight:700;font-size:13.5px">${cfg.me.name} • ${fm.type}</div><div style="font-size:11.5px;opacity:.65">${fm.date}</div></div></div>
+              <div class="msg-bubble">„${fm.caption}”</div>
+              <div class="funny-note">${fm.funnyNote}</div>
+              <a class="tiktok-link-btn" href="${fm.url}" target="_blank" rel="noopener noreferrer">🎬 Otwórz ten historyczny TikTok ↗</a>`;
+            return f;
+          }
+        }
+      ];
+
+      document.getElementById("mini-avatars").innerHTML = `<img src="${cfg.me.avatar}" alt="Ja"/><img src="${cfg.her.avatar}" alt="@mdartynaaa"/>`;
+      const deck = document.getElementById("cards-deck");
+      const progressFill = document.getElementById("progress-fill");
+      const progressLabel = document.getElementById("progress-label");
+      const slots = [];
+
+      function updateProgress() {
+        const rev = slots.filter((s) => s.el.classList.contains("revealed")).length;
+        progressFill.style.width = `${(rev / CARDS.length) * 100}%`;
+        progressLabel.textContent = rev === CARDS.length ? "Wszystkie odsłonięte 🔥" : `${rev} / ${CARDS.length} kart`;
+      }
+
+      function revealSlot(s, x, y, silent = false) {
+        if (s.el.classList.contains("revealed")) return;
+        s.el.classList.add("revealed");
+        if (!silent) { playChime(); launchConfetti(48, x || window.innerWidth / 2, y || window.innerHeight * 0.4); }
+        if (typeof s.spec.onReveal === "function") s.spec.onReveal(s.face);
+        updateProgress();
+      }
+
+      CARDS.forEach((spec, idx) => {
+        const slot = document.createElement("div"); slot.className = "reveal-slot";
+        const cover = document.createElement("button"); cover.type = "button"; cover.className = `card-cover ${spec.coverClass || ""}`;
+        cover.innerHTML = `<div class="cover-left"><div class="cover-icon">${spec.icon}</div><div><div class="cover-num">Karta 0${idx + 1}</div><div class="cover-title">${spec.title}</div><div class="cover-hint">${spec.hint}</div></div></div><span class="cover-pill">Odsłoń</span>`;
+        const face = spec.buildFace();
+        slot.appendChild(cover); slot.appendChild(face); deck.appendChild(slot);
+        const sObj = { el: slot, face, spec }; slots.push(sObj);
+        cover.addEventListener("click", (e) => revealSlot(sObj, e.clientX, e.clientY, false));
+      });
+
+      document.getElementById("reveal-all-btn").addEventListener("click", () => {
+        playChime(); launchConfetti(70);
+        slots.forEach((s, i) => setTimeout(() => revealSlot(s, null, null, true), i * 110));
+      });
+      document.getElementById("reset-all-btn").addEventListener("click", () => {
+        slots.forEach((s) => s.el.classList.remove("revealed")); updateProgress(); window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      document.getElementById("sound-toggle").addEventListener("click", (e) => {
+        soundEnabled = !soundEnabled; e.currentTarget.textContent = soundEnabled ? "🔊" : "🔇";
+      });
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+      updateProgress();
+    </script>
+  </body>
+</html>
